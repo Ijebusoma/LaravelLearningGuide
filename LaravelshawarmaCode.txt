@@ -1,0 +1,68 @@
+use App\User;
+use App\UserAds;
+use App\FreeAds;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use App\Http\Requests\UploadRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+
+class AdsController extends Controller {
+
+	public function SaveAd(UploadRequest $request)
+    {
+
+        if ($request->hasFile('ad_image'))  //check if file is an image
+        {
+
+
+           $adimage = $request->file('ad_image');
+
+
+            $currentUser  = \Auth::user();
+            $image     = $adimage;
+            $filename     = 'ad.' . $image->getClientOriginalExtension();
+            $save_path    = storage_path() . '/users/id/' . $currentUser->id . '/ad';
+            $public_path  = '/images/' . $currentUser->id . '/ad/' . $filename;
+
+            File::makeDirectory($save_path, $mode = 0755, true, true);
+            $result = Storage::disk('public')->put($save_path, $filename);//save to the public directory
+
+
+
+        } else {
+            return 'No file selected';
+        }
+
+         $title = $request['ad_title'];
+         $firstname = $currentUser->name;
+          $price = $request['ad_price'];
+         $longdesc = $request['ad_longdesc'];
+          $shortdesc = $request['ad_shortdesc'];
+         $location = $request['ad_location'];
+         $phone = $request['ad_phone'];
+
+         $newFreeAd = new FreeAds();
+
+         $newFreeAd->title = $title;
+         $newFreeAd->firstname = $firstname;
+         $newFreeAd->price = $price;
+        $newFreeAd->image = $public_path;  //the public path to the image
+         $newFreeAd->longdesc = $longdesc;
+        $newFreeAd->shortdesc = $shortdesc;
+          $newFreeAd->location = $location;
+         $newFreeAd->phone = $phone;
+
+         if ($newFreeAd->save()){
+         // Successfully posted advert
+         echo "Your Ad would would be live"; // return dashboard with flash message
+         }
+         else {
+          // Unable to post advert
+         //return redirect()->back();
+             echo "There was a problem posting your ad, pls try again in a few mins";
+         }
+
+    }
+
